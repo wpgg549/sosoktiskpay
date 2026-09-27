@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Downloader Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .container {
+            background: #181818;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            width: 100%;
+            max-width: 580px;
+            border: 1px solid #282828;
+            position: relative;
+        }
+
+        /* Panel Status Sistem (Baterai, Koneksi, Ping) */
+        .system-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #202020;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #2e2e2e;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .stat-value {
+            font-size: 13px;
+            color: #1db954;
+            font-weight: 700;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .header h2 span { color: #1db954; }
+        .header p { color: #b3b3b3; font-size: 13px; margin-top: 5px; }
+        
+        .input-group { position: relative; margin-bottom: 15px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            background: #242424;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus { border-color: #1db954; }
+        
+        button {
+            background: #1db954;
+            color: #000000;
+            border: none;
+            padding: 14px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover { background: #1ed760; transform: scale(1.01); }
+        
+        .loading {
+            text-align: center;
+            color: #1db954;
+            margin-top: 20px;
+            font-weight: 500;
+            font-size: 13px;
+            display: none;
+        }
+        
+        .result-card {
+            margin-top: 25px;
+            background: #242424;
+            border-radius: 12px;
+            padding: 18px;
+            display: none;
+            align-items: center;
+            gap: 18px;
+            border: 1px solid #333;
+        }
+        .result-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .song-info { flex: 1; overflow: hidden; }
+        .song-info h3 {
+            margin: 0 0 4px 0;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .song-info p { margin: 3px 0; color: #b3b3b3; font-size: 12px; }
+        
+        .btn-download {
+            display: inline-block;
+            margin-top: 10px;
+            background: #1db954;
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        .btn-download:hover { background: #1ed760; }
+
+        .lyrics-container { margin-top: 20px; display: none; }
+        .lyrics-toggle {
+            background: #242424;
+            border: 1px solid #333;
+            color: #b3b3b3;
+            padding: 10px 14px;
+            border-radius: 8px;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .lyrics-toggle:hover { background: #2a2a2a; color: #fff; }
+        .lyrics-box {
+            margin-top: 8px;
+            background: #121212;
+            color: #b3b3b3;
+            padding: 14px;
+            border-radius: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-line;
+            border: 1px solid #282828;
+            display: none;
+        }
+
+        /* Watermark Melayang (Floating WM) */
+        .floating-wm {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(24, 24, 24, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #1db954;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            z-index: 1000;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .floating-wm span { color: #fff; font-weight: 400; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <!-- Watermark Melayang -->
+    <div class="floating-wm">⚡ Pecut <span>AI</span></div>
+
+    <div class="container">
+        <!-- Panel Info Sistem Profesional -->
+        <div class="system-stats">
+            <div class="stat-item">
+                <div class="stat-label">Baterai</div>
+                <div class="stat-value" id="batteryStatus">Memuat...</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Jaringan</div>
+                <div class="stat-value" id="networkStatus">Memuat...</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Latensi Server</div>
+                <div class="stat-value" id="latencyStatus">Mengukur...</div>
+            </div>
+        </div>
+
+        <div class="header">
+            <h2><span>Spotify</span> Downloader</h2>
+            <p>Download track & lirik kecepatan tinggi</p>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="spotifyUrl" placeholder="https://open.spotify.com/track/..." value="https://open.spotify.com/track/5kJ2lw9zz2BMMN7YcI4NZb">
+        </div>
+        
+        <button onclick="downloadSpotify()">Download MP3</button>
+        
+        <div id="loading" class="loading">Sedang memproses lagu...</div>
+
+        <div id="resultCard" class="result-card">
+            <img id="songCover" src="" alt="Album Cover">
+            <div class="song-info">
+                <h3 id="songTitle">-</h3>
+                <p id="songArtist">-</p>
+                <p id="songAlbum">-</p>
+                <a id="downloadBtn" href="#" class="btn-download" target="_blank">📥 Download File</a>
+            </div>
+        </div>
+
+        <div id="lyricsContainer" class="lyrics-container">
+            <button class="lyrics-toggle" onclick="toggleLyrics()">
+                <span>📄 Lihat Lirik Lagu</span>
+                <span id="arrowIcon">▼</span>
+            </button>
+            <div id="lyricsBox" class="lyrics-box"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Cek Status Baterai
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                function updateBattery() {
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging ? '⚡ ' : '';
+                    document.getElementById('batteryStatus').textContent = `${charging}${level}%`;
+                }
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+                battery.addEventListener('chargingchange', updateBattery);
+            });
+        } else {
+            document.getElementById('batteryStatus').textContent = 'Didukung';
+        }
+
+        // 2. Cek Jenis Koneksi Internet
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (connection) {
+            function updateNetwork() {
+                const type = connection.effectiveType ? connection.effectiveType.toUpperCase() : 'ONLINE';
+                document.getElementById('networkStatus').textContent = type;
+            }
+            updateNetwork();
+            connection.addEventListener('change', updateNetwork);
+        } else {
+            document.getElementById('networkStatus').textContent = 'Online';
+        }
+
+        // 3. Cek Latensi / Ping Server Vercel
+        async function measureLatency() {
+            const latencyEl = document.getElementById('latencyStatus');
+            const start = performance.now();
+            try {
+                // Tembak proxy dengan parameter kosong untuk tes respon server
+                await fetch('/api/proxy');
+            } catch (e) {
+                // Walaupun error 400 (karena url kosong), server Vercel tetap merespon
+            }
+            const end = performance.now();
+            const ping = Math.round(end - start);
+            latencyEl.textContent = `${ping} ms`;
+        }
+        measureLatency();
+
+        // 4. Fungsi Utama Download Spotify
+        async function downloadSpotify() {
+            const songUrl = document.getElementById('spotifyUrl').value;
+            const loading = document.getElementById('loading');
+            const resultCard = document.getElementById('resultCard');
+            const lyricsContainer = document.getElementById('lyricsContainer');
+            const lyricsBox = document.getElementById('lyricsBox');
+            
+            if (!songUrl) {
+                alert('Masukkan link Spotify-nya dulu bro!');
+                return;
+            }
+
+            loading.style.display = 'block';
+            resultCard.style.display = 'none';
+            lyricsContainer.style.display = 'none';
+            lyricsBox.style.display = 'none';
+
+            const proxyUrl = `/api/proxy?url=${encodeURIComponent(songUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                const textData = await response.text();
+                const res = JSON.parse(textData);
+
+                loading.style.display = 'none';
+
+                if (res.status && res.result) {
+                    const data = res.result;
+
+                    document.getElementById('songCover').src = data.cover;
+                    document.getElementById('songTitle').textContent = data.title;
+                    document.getElementById('songArtist').textContent = data.artists.join(', ');
+                    document.getElementById('songAlbum').textContent = `${data.album.name} • ${data.duration}`;
+                    document.getElementById('downloadBtn').href = data.downloadUrl;
+
+                    resultCard.style.display = 'flex';
+
+                    if (data.lyrics && data.lyrics.plainLyrics) {
+                        lyricsBox.textContent = data.lyrics.plainLyrics;
+                        lyricsContainer.style.display = 'block';
+                    }
+                } else {
+                    alert('Gagal mengambil data dari API!');
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                alert("Terjadi error: " + error.message);
+            }
+        }
+
+        function toggleLyrics() {
+            const lyricsBox = document.getElementById('lyricsBox');
+            const arrowIcon = document.getElementById('arrowIcon');
+            if (lyricsBox.style.display === 'block') {
+                lyricsBox.style.display = 'none';
+                arrowIcon.textContent = '▼';
+            } else {
+                lyricsBox.style.display = 'block';
+                arrowIcon.textContent = '▲';
+            }
+        }
+    </script>
+</body>
+</html>
